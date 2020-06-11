@@ -575,17 +575,17 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
                                  NSNumber *compressQuality = [self.options valueForKey:@"compressImageQuality"];
                                  Boolean isLossless = (compressQuality == nil || [compressQuality floatValue] >= 0.8);
 
-                                 NSNumber *maxWidth = [self.options valueForKey:@"compressImageMaxWidth"];
-                                 Boolean useOriginalWidth = (maxWidth == nil || [maxWidth integerValue] >= imgT.size.width);
+                                 NSNumber *minEdge = [self.options valueForKey:@"compressImageMinEdge"];
+                                 Boolean useOriginalMinEdge = (minEdge == nil || [minEdge integerValue] >= imgT.size.width);
 
-                                 NSNumber *maxHeight = [self.options valueForKey:@"compressImageMaxHeight"];
-                                 Boolean useOriginalHeight = (maxHeight == nil || [maxHeight integerValue] >= imgT.size.height);
+                                 NSNumber *maxEdge = [self.options valueForKey:@"compressImageMaxEdge"];
+                                 Boolean useOriginalMaxEdge = (maxEdge == nil || [maxEdge integerValue] >= imgT.size.height);
 
                                  NSString *mimeType = [self determineMimeTypeFromImageData:imageData];
                                  Boolean isKnownMimeType = [mimeType length] > 0;
 
                                  ImageResult *imageResult = [[ImageResult alloc] init];
-                                 if (isLossless && useOriginalWidth && useOriginalHeight && isKnownMimeType && !forceJpg) {
+                                 if (isLossless && useOriginalMinEdge && useOriginalMaxEdge && isKnownMimeType && !forceJpg) {
                                      // Use original, unmodified image
                                      imageResult.data = imageData;
                                      imageResult.width = @(imgT.size.width);

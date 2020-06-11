@@ -34,23 +34,16 @@
 }
 
 - (ImageResult*) compressImageDimensions:(UIImage*)image
-                   compressImageMaxWidth:(CGFloat)maxWidth
-                  compressImageMaxHeight:(CGFloat)maxHeight
+                   compressImageMinEdge:(CGFloat)minEdge
+                   compressImageMaxEdge:(CGFloat)maxEdge
                               intoResult:(ImageResult*)result {
     
-    CGFloat oldWidth = image.size.width;
-    CGFloat oldHeight = image.size.height;
-    
-    int newWidth = 0;
-    int newHeight = 0;
-    
-    if (maxWidth < maxHeight) {
-        newWidth = maxWidth;
-        newHeight = (oldHeight / oldWidth) * newWidth;
-    } else {
-        newHeight = maxHeight;
-        newWidth = (oldWidth / oldHeight) * newHeight;
-    }
+    CGFloat minSide = MIN(image.size.width, image.size.height);
+    CGFloat maxSide = MAX(image.size.width, image.size.height);
+    CGFloat scale = MIN(1.0, MIN(minEdge / minSide, maxEdge / maxSide));
+    int newWidth = (int)(scale * image.size.width);
+    int newHeight = (int)(scale * image.size.height);
+
     CGSize newSize = CGSizeMake(newWidth, newHeight);
     
     UIGraphicsBeginImageContext(newSize);
@@ -73,20 +66,20 @@
     result.image = image;
     result.mime = @"image/jpeg";
     
-    NSNumber *compressImageMaxWidth = [options valueForKey:@"compressImageMaxWidth"];
-    NSNumber *compressImageMaxHeight = [options valueForKey:@"compressImageMaxHeight"];
+    NSNumber *compressImageMinEdge = [options valueForKey:@"compressImageMinEdge"];
+    NSNumber *compressImageMaxEdge = [options valueForKey:@"compressImageMaxEdge"];
     
     // determine if it is necessary to resize image
-    BOOL shouldResizeWidth = (compressImageMaxWidth != nil && [compressImageMaxWidth floatValue] < image.size.width);
-    BOOL shouldResizeHeight = (compressImageMaxHeight != nil && [compressImageMaxHeight floatValue] < image.size.height);
+    BOOL shouldResizeWidth = (compressImageMinEdge != nil && [compressImageMinEdge floatValue] < image.size.width);
+    BOOL shouldResizeHeight = (compressImageMaxEdge != nil && [compressImageMaxEdge floatValue] < image.size.height);
     
     if (shouldResizeWidth || shouldResizeHeight) {
-        CGFloat maxWidth = compressImageMaxWidth != nil ? [compressImageMaxWidth floatValue] : image.size.width;
-        CGFloat maxHeight = compressImageMaxHeight != nil ? [compressImageMaxHeight floatValue] : image.size.height;
+        CGFloat minEdge = compressImageMinEdge != nil ? [compressImageMinEdge floatValue] : image.size.width;
+        CGFloat maxEdge = compressImageMaxEdge != nil ? [compressImageMaxEdge floatValue] : image.size.height;
         
         [self compressImageDimensions:image
-                compressImageMaxWidth:maxWidth
-               compressImageMaxHeight:maxHeight
+                compressImageMinEdge:minEdge
+                compressImageMaxEdge:maxEdge
                            intoResult:result];
     }
     
