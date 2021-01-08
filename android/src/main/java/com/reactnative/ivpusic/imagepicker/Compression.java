@@ -89,13 +89,19 @@ class Compression {
     }
 
     File compressImage(final Context context, final ReadableMap options, final String originalImagePath, final BitmapFactory.Options bitmapOptions) throws IOException {
-        Integer maxWidth = options.hasKey("compressImageMaxWidth") ? options.getInt("compressImageMaxWidth") : null;
-        Integer maxHeight = options.hasKey("compressImageMaxHeight") ? options.getInt("compressImageMaxHeight") : null;
+        Double minEdge = options.hasKey("compressImageMinEdge") ? options.getDouble("compressImageMinEdge") : null;
+        Double maxEdge = options.hasKey("compressImageMaxEdge") ? options.getDouble("compressImageMaxEdge") : null;
         Double quality = options.hasKey("compressImageQuality") ? options.getDouble("compressImageQuality") : null;
 
+        Double minSide = new Double(Math.min(bitmapOptions.outWidth, bitmapOptions.outHeight));
+        Double maxSide = new Double(Math.max(bitmapOptions.outWidth, bitmapOptions.outHeight));
+        Double scale = Math.min(1.0, Math.min(minEdge / minSide, maxEdge / maxSide));
+        Double newWidth = scale * bitmapOptions.outWidth;
+        Double newHeight = scale * bitmapOptions.outHeight;
+
         boolean isLossLess = (quality == null || quality == 1.0);
-        boolean useOriginalWidth = (maxWidth == null || maxWidth >= bitmapOptions.outWidth);
-        boolean useOriginalHeight = (maxHeight == null || maxHeight >= bitmapOptions.outHeight);
+        boolean useOriginalWidth = newWidth.intValue() == bitmapOptions.outWidth;
+        boolean useOriginalHeight = newHeight.intValue() == bitmapOptions.outHeight;
 
         List knownMimes = Arrays.asList("image/jpeg", "image/jpg", "image/png", "image/gif", "image/tiff");
         boolean isKnownMimeType = (bitmapOptions.outMimeType != null && knownMimes.contains(bitmapOptions.outMimeType.toLowerCase()));
@@ -111,19 +117,7 @@ class Compression {
         int targetQuality = quality != null ? (int) (quality * 100) : 100;
         Log.d("image-crop-picker", "Compressing image with quality " + targetQuality);
 
-        if (maxWidth == null) {
-            maxWidth = bitmapOptions.outWidth;
-        } else {
-            maxWidth = Math.min(maxWidth, bitmapOptions.outWidth);
-        }
-
-        if (maxHeight == null) {
-            maxHeight = bitmapOptions.outHeight;
-        } else {
-            maxHeight = Math.min(maxHeight, bitmapOptions.outHeight);
-        }
-
-        return resize(context, originalImagePath, maxWidth, maxHeight, targetQuality);
+        return resize(context, originalImagePath, newWidth.intValue(), newHeight.intValue(), targetQuality);
     }
 
     synchronized void compressVideo(final Activity activity, final ReadableMap options, final String originalVideo, final String compressedVideo, final Promise promise) {
